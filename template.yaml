@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Notify AWS Billing to Slack every day
+
+Globals:
+  Function:
+    Timeout: 10
+
+Parameters:
+  SlackWebhookUrl:
+    Type: String
+    Default: hoge
+
+Resources:
+  BillingIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "NotifyBillingToSlackLambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "ce:GetCostAndUsage"
+                Resource: "*"
+  NotifyBillingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: notify_billing/
+      Handler: app.lambda_handler
+      Runtime: python3.6
+      Environment:
+        Variables:
+          SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
+      Role: !GetAtt BillingIamRole.Arn
+      Events:
+        NotifySlack:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 5 * * ? *)
+
+Outputs:
+  NotifyBillingFunction:
+    Description: "Notify Billing Lambda Function ARN"
+    Value: !GetAtt NotifyBillingFunction.Arn
+  NotifyBillingFunctionIamRole:
+    Description: "Implicit IAM Role created for Notify Billing function"
+    Value: !GetAtt BillingIamRole.Arn
