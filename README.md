@@ -5,13 +5,13 @@
 ### deploy
 
 ```
-./deploy.sh -b <test-bucket> -s https://hooks.slack.com/services/AAAAAAA
+./deploy.sh -b <test-bucket> -s https://hooks.slack.com/services/AAAAAAA -p <AWS profile>
 ```
 
 ### destroy
 
 ```
-./destroy.sh
+./destroy.sh -p <AWS profile>
 ```
 
 
